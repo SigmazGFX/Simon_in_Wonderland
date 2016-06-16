@@ -205,17 +205,17 @@ void showPattern()
     {
       noTone(TonePin);
 
-      
-        FastLED.setBrightness(255);
-        fill_solid(window0, NUM_LEDS, CRGB::Black);
-        fill_solid(window1, NUM_LEDS, CRGB::Black);
-        fill_solid(window2, NUM_LEDS, CRGB::Black);
-        FastLED.show();
 
-      }
+      FastLED.setBrightness(255);
+      fill_solid(window0, NUM_LEDS, CRGB::Black);
+      fill_solid(window1, NUM_LEDS, CRGB::Black);
+      fill_solid(window2, NUM_LEDS, CRGB::Black);
+      FastLED.show();
 
     }
+
   }
+}
 
 
 void VerifyButtons()
@@ -244,8 +244,12 @@ void VerifyButtons()
         fill_solid(window1, NUM_LEDS, CRGB::Red);
         fill_solid(window2, NUM_LEDS, CRGB::Red);
         FastLED.show();
-        delay(2000);
+        tone(TonePin, 90);
+        delay(500);
+        tone(TonePin, 90);
+        delay(500);
         int playGame = 0;
+        noTone(TonePin);
         break;
       }
     }
@@ -258,8 +262,12 @@ void VerifyButtons()
       fill_solid(window1, NUM_LEDS, CRGB::Red);
       fill_solid(window2, NUM_LEDS, CRGB::Red);
       FastLED.show();
-      delay(2000);
+      tone(TonePin, 90);
+      delay(500);
+      tone(TonePin, 90);
+      delay(500);
       int playGame = 0;
+      noTone(TonePin);
       PatternStatus = false;
       break;
     }
@@ -271,6 +279,7 @@ void VerifyButtons()
     updatePattern();
   }
   else Serial.println(F("Player Lost"));
+
 }
 
 
@@ -412,18 +421,6 @@ void mapNoiseToLEDsUsingPalette()
   ihue += 1;
 }
 
-//
-//void confetti_2( uint8_t colorVariation, uint8_t fadeAmount)
-//{
-//  // random colored speckles that blink in and fade smoothly
-//  fadeToBlackBy( window0, NUM_LEDS, fadeAmount);
-//  fadeToBlackBy( window1, NUM_LEDS, fadeAmount);
-//  fadeToBlackBy( window2, NUM_LEDS, fadeAmount);
-//  int pos = random16(NUM_LEDS);
-//  window0[pos] += CHSV( gHue + random8(colorVariation), 200, 255);
-//  window1[pos] += CHSV( gHue + random8(colorVariation), 200, 255);
-//  window2[pos] += CHSV( gHue + random8(colorVariation), 200, 255);
-//}
 
 
 void startGame()
@@ -453,3 +450,4 @@ void startGame()
 
   }
 }
+
