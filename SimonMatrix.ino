@@ -143,6 +143,8 @@ uint8_t gHue = 0; // rotating "base color" used by many of the patterns
 void loop()
 {
 
+  startGame();
+
   if (gameWon == 1) {
     digitalWrite(LockPin, LOW);
     rainbowWithGlitter_2(10, 80);
@@ -450,4 +452,3 @@ void startGame()
 
   }
 }
-
