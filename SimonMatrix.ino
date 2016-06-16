@@ -79,8 +79,8 @@ uint8_t       colorLoop = 1;
 // 4 | 10  . 11  . 12
 
 // This function will return the right 'led index number' for
-// a given set of X and Y coordinates in the array.
-// This code, plus the supporting table is much smaller
+// a given set of X and Y coordinates on your RGB Shades.
+// This code, plus the supporting 80-byte table is much smaller
 // and much faster than trying to calculate the pixel ID with code.
 #define LAST_VISIBLE_LED 12
 uint8_t XY( uint8_t x, uint8_t y)
@@ -148,6 +148,7 @@ void loop()
   if (gameWon == 1) {
     digitalWrite(LockPin, LOW);
     rainbowWithGlitter_2(10, 80);
+    FastLED.setBrightness(255);
     FastLED.show();
     FastLED.delay(1000 / 120);
   }
@@ -453,3 +454,15 @@ void startGame()
   }
 }
 
+//
+//void confetti_2( uint8_t colorVariation, uint8_t fadeAmount)
+//{
+//  // random colored speckles that blink in and fade smoothly
+//  fadeToBlackBy( window0, NUM_LEDS, fadeAmount);
+//  fadeToBlackBy( window1, NUM_LEDS, fadeAmount);
+//  fadeToBlackBy( window2, NUM_LEDS, fadeAmount);
+//  int pos = random16(NUM_LEDS);
+//  window0[pos] += CHSV( gHue + random8(colorVariation), 200, 255);
+//  window1[pos] += CHSV( gHue + random8(colorVariation), 200, 255);
+//  window2[pos] += CHSV( gHue + random8(colorVariation), 200, 255);
+//}
