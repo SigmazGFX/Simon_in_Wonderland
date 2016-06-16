@@ -137,18 +137,7 @@ void setup()
 
 
 uint8_t gHue = 0; // rotating "base color" used by many of the patterns
-//
-//void confetti_2( uint8_t colorVariation, uint8_t fadeAmount)
-//{
-//  // random colored speckles that blink in and fade smoothly
-//  fadeToBlackBy( window0, NUM_LEDS, fadeAmount);
-//  fadeToBlackBy( window1, NUM_LEDS, fadeAmount);
-//  fadeToBlackBy( window2, NUM_LEDS, fadeAmount);
-//  int pos = random16(NUM_LEDS);
-//  window0[pos] += CHSV( gHue + random8(colorVariation), 200, 255);
-//  window1[pos] += CHSV( gHue + random8(colorVariation), 200, 255);
-//  window2[pos] += CHSV( gHue + random8(colorVariation), 200, 255);
-//}
+
 
 
 void loop()
@@ -162,42 +151,17 @@ void loop()
   }
 
   if (playGame == 0) {
-
+    FastLED.setBrightness(64);
     // generate noise data
     fillnoise8();
-
     // convert the noise data to colors in the LED array
     // using the current palette
     mapNoiseToLEDsUsingPalette();
-
-
-
-
-
-    //
-    //      FastLED.setBrightness(BRIGHTNESS);
-    //    }
-    //    FastLED.show();
   }
 
   if (playGame == 1) {
     showPattern(); // display the LED pattern
     VerifyButtons(); // wait for button presses and check to see button presses match LEDs that were lit
-  }
-}
-void DrawOneFrame( byte startHue8, int8_t yHueDelta8, int8_t xHueDelta8)
-{
-  byte lineStartHue = startHue8;
-  for ( byte y = 0; y < kMatrixHeight; y++) {
-    lineStartHue += yHueDelta8;
-    byte pixelHue = lineStartHue;
-    for ( byte x = 0; x < kMatrixWidth; x++) {
-      pixelHue += xHueDelta8;
-      //leds[ XY(x, y)]  = CHSV( pixelHue, 255, 255);
-      window0[ XY(x, y)]  = CHSV( pixelHue, 255, 255);
-      window1[ XY(x, y)]  = CHSV( pixelHue, 255, 255);
-      window2[ XY(x, y)]  = CHSV( pixelHue, 255, 255);
-    }
   }
 }
 
@@ -287,13 +251,27 @@ void VerifyButtons()
       else // If at any time a button was incorrect, set PatternStatus to false to show losing message then get out of while loop
       {
         PatternStatus = false;
+        FastLED.setBrightness(255);
+        fill_solid(window0, NUM_LEDS, CRGB::Red);
+        fill_solid(window1, NUM_LEDS, CRGB::Red);
+        fill_solid(window2, NUM_LEDS, CRGB::Red);
+        FastLED.show();
+        delay(2000);
+        int playGame = 0;
         break;
       }
     }
     else
     {
       noTone(TonePin);
-      Serial.println(F("Times Up"));
+      //Serial.println(F("Times Up"));
+      FastLED.setBrightness(255);
+      fill_solid(window0, NUM_LEDS, CRGB::Red);
+      fill_solid(window1, NUM_LEDS, CRGB::Red);
+      fill_solid(window2, NUM_LEDS, CRGB::Red);
+      FastLED.show();
+      delay(2000);
+      int playGame = 0;
       PatternStatus = false;
       break;
     }
@@ -328,7 +306,7 @@ int Getbutton()
     for (count = 0; count < Num_of_Panes; count++) // loop through all the buttons
     {
       buttonState[count] = digitalRead(ButtonPin[count]); // read button states
-      //-------------------------DEBOUNCE STUFF--------------------------------------------------------------------
+
       if (buttonState[count] != lastButtonState[count]) // check to see if the state has changed from last press
 
       {
@@ -340,7 +318,6 @@ int Getbutton()
       }
       if ((millis() - lastDebounceTime[count]) > 50UL)
       {
-        //------------------------/DEBOUNCE STUFF----------------------------------------------------------------
         if (buttonState[count] == LOW)
         {
           return ButtonPin[count];
@@ -447,6 +424,44 @@ void mapNoiseToLEDsUsingPalette()
   ihue += 1;
 }
 
+//
+//void confetti_2( uint8_t colorVariation, uint8_t fadeAmount)
+//{
+//  // random colored speckles that blink in and fade smoothly
+//  fadeToBlackBy( window0, NUM_LEDS, fadeAmount);
+//  fadeToBlackBy( window1, NUM_LEDS, fadeAmount);
+//  fadeToBlackBy( window2, NUM_LEDS, fadeAmount);
+//  int pos = random16(NUM_LEDS);
+//  window0[pos] += CHSV( gHue + random8(colorVariation), 200, 255);
+//  window1[pos] += CHSV( gHue + random8(colorVariation), 200, 255);
+//  window2[pos] += CHSV( gHue + random8(colorVariation), 200, 255);
+//}
 
 
+void startGame()
+{
+  for (count = 0; count < Num_of_Panes; count++) // loop through all the buttons
 
+  {
+    buttonState[count] = digitalRead(ButtonPin[count]); // read button states
+
+    if (buttonState[count] != lastButtonState[count]) // check to see if the state has changed from last press
+
+    {
+      if (buttonState[count] == LOW)
+      {
+        lastDebounceTime[count] = millis();// record the time of the last press
+        lastButtonState[count] = buttonState[count]; // update old button state for next checking
+      }
+    }
+
+    if ((millis() - lastDebounceTime[count]) > 50UL)
+    {
+      if (buttonState[count] == LOW)
+      {
+        int playGame = 1;
+      }
+    }
+
+  }
+}
