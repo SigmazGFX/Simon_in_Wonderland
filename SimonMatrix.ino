@@ -79,8 +79,8 @@ uint8_t       colorLoop = 1;
 // 4 | 10  . 11  . 12
 
 // This function will return the right 'led index number' for
-// a given set of X and Y coordinates on your RGB Shades.
-// This code, plus the supporting 80-byte table is much smaller
+// a given set of X and Y coordinates in the array.
+// This code, plus the supporting table is much smaller
 // and much faster than trying to calculate the pixel ID with code.
 #define LAST_VISIBLE_LED 12
 uint8_t XY( uint8_t x, uint8_t y)
@@ -90,7 +90,7 @@ uint8_t XY( uint8_t x, uint8_t y)
     return (LAST_VISIBLE_LED + 1);
   }
 
-  const uint8_t ShadesTable[] = {
+  const uint8_t ArrayTable[] = {
     0, 25, 1, 24, 2,
     21, 4, 22, 3, 23,
     5, 20, 6, 19, 7,
@@ -99,7 +99,7 @@ uint8_t XY( uint8_t x, uint8_t y)
   };
 
   uint8_t i = (y * kMatrixWidth) + x;
-  uint8_t j = ShadesTable[i];
+  uint8_t j = ArrayTable[i];
   return j;
 }
 
@@ -452,3 +452,4 @@ void startGame()
 
   }
 }
+
