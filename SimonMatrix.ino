@@ -182,14 +182,14 @@ void showPattern()
         FastLED.show();
 
       }
-      if (pattern == 1) {  // Im not sure if I use (ledList[pattern]) or just pattern to select the window..
+      if (ledList[pattern] == 1) {  // Im not sure if I use (ledList[pattern]) or just pattern to select the window..
 
         FastLED.setBrightness(255);
         fill_solid(window1, NUM_LEDS, CRGB::Green);
         FastLED.show();
 
       }
-      if (pattern == 2) {  // Im not sure if I use (ledList[pattern]) or just pattern to select the window..
+      if (ledList[pattern] == 2) {  // Im not sure if I use (ledList[pattern]) or just pattern to select the window..
 
         FastLED.setBrightness(255);
         fill_solid(window2, NUM_LEDS, CRGB::Blue);
@@ -205,22 +205,10 @@ void showPattern()
     {
       noTone(TonePin);
 
-      if (ledList[pattern] == 0) { // Im not sure if I use (ledList[pattern]) or just pattern to select the window..
+      
         FastLED.setBrightness(255);
         fill_solid(window0, NUM_LEDS, CRGB::Black);
-        FastLED.show();
-
-      }
-      if (pattern == 1) {  // Im not sure if I use (ledList[pattern]) or just pattern to select the window..
-
-        FastLED.setBrightness(255);
         fill_solid(window1, NUM_LEDS, CRGB::Black);
-        FastLED.show();
-
-      }
-      if (pattern == 2) {  // Im not sure if I use (ledList[pattern]) or just pattern to select the window..
-
-        FastLED.setBrightness(255);
         fill_solid(window2, NUM_LEDS, CRGB::Black);
         FastLED.show();
 
@@ -228,7 +216,7 @@ void showPattern()
 
     }
   }
-}
+
 
 void VerifyButtons()
 {
