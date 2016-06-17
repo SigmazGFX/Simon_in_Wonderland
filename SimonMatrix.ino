@@ -8,29 +8,30 @@ FASTLED_USING_NAMESPACE
 #endif
 
 #define LOCK_PIN    13 // Pin to control the lock
-#define DATA_PIN0   6  // Top Window
-#define DATA_PIN1   7  // Middle Window
-#define DATA_PIN2   8  // Bottom Window
+
+#define DATA_PIN   6
 #define LED_TYPE    WS2812B
 #define COLOR_ORDER GRB
 const uint8_t kMatrixWidth = 5;
-const uint8_t kMatrixHeight = 5;
+const uint8_t kMatrixHeight = 15;
 #define NUM_LEDS (kMatrixWidth * kMatrixHeight)
 #define MAX_DIMENSION ((kMatrixWidth>kMatrixHeight) ? kMatrixWidth : kMatrixHeight)
-CRGB window0[NUM_LEDS];
-CRGB window1[NUM_LEDS];
-CRGB window2[NUM_LEDS];
+
+CRGB leds[NUM_LEDS];
+//CRGB window0[NUM_LEDS];
+//CRGB window1[NUM_LEDS];
+//CRGB window2[NUM_LEDS];
 #define BRIGHTNESS  64
 #define LockPin 13
 
 const int red_button = 2;      // Input pins for the buttons
 const int blue_button = 3;
-const int yellow_button = 4;
+const int green_button = 4;
 
 // Instantiate a Debounce object with a 20 millisecond debounce time
 Debounce debounceR = Debounce( 20 , red_button );
 Debounce debounceB = Debounce( 20 , blue_button );
-Debounce debounceY = Debounce( 20 , yellow_button );
+Debounce debounceG = Debounce( 20 , green_button );
 
 const int buzzer = 5;     // Output pin for the buzzer
 long sequence[20];             // Array to hold sequence
@@ -58,22 +59,43 @@ uint8_t       colorLoop = 1;
 
 // Params for width and height
 
-
-// Pixel layout
-//
-//      0  1  2  3  4
-//   +-----------------
-// 0 |  0  .  1  .  2
-// 1 |  .  4  .  3  .
-// 2 |  5 .   6  .  7
-// 3 |  .  9  .  8  .
-// 4 | 10  . 11  . 12
+int topstart = 0;
+int toplength = 13;
+int centerstart = 13;
+int centerlength = 13;
+int bottomstart = 26;
+int bottomlength = 13;
 
 // This function will return the right 'led index number' for
 // a given set of X and Y coordinates on your RGB Shades.
 // This code, plus the supporting 80-byte table is much smaller
 // and much faster than trying to calculate the pixel ID with code.
-#define LAST_VISIBLE_LED 12
+//5x15 array (75-LEDS) LAST_VISIBLE_LED 38
+const uint8_t ArrayTable[] = {
+  //--Top
+  0,  74,  1, 73,  2,
+  70,  4, 71,  3, 72,
+  5,  69,  6, 68,  7,
+  65,  9, 66,  8, 67,
+  10, 64, 11, 63, 12,
+  //--Center
+  15, 61, 14, 62, 13,
+  60, 16, 59, 17, 58,
+  20, 56, 19, 57, 18,
+  55, 21, 54, 22, 53,
+  25, 51, 24, 52, 23,
+  //--Bottom
+  26, 50, 27, 49, 28,
+  46, 30, 47, 29, 48,
+  31, 45, 32, 44, 33,
+  41, 35, 42, 34, 43,
+  36, 40, 37, 39, 38
+};
+
+
+
+
+#define LAST_VISIBLE_LED 38
 uint8_t XY( uint8_t x, uint8_t y)
 {
   // any out of bounds address maps to the first hidden pixel
@@ -81,13 +103,15 @@ uint8_t XY( uint8_t x, uint8_t y)
     return (LAST_VISIBLE_LED + 1);
   }
 
-  const uint8_t ArrayTable[] = {
-    0, 25, 1, 24, 2,
-    21, 4, 22, 3, 23,
-    5, 20, 6, 19, 7,
-    16, 9, 17, 8, 18,
-    10, 15, 11, 14, 12
-  };
+  //  const uint8_t ArrayTable[] = {
+  //    0, 25, 1, 24, 2,
+  //    21, 4, 22, 3, 23,
+  //    5, 20, 6, 19, 7,
+  //    16, 9, 17, 8, 18,
+  //    10, 15, 11, 14, 12
+  //  };
+
+
 
   uint8_t i = (y * kMatrixWidth) + x;
   uint8_t j = ArrayTable[i];
@@ -104,9 +128,10 @@ void setup()
   z = random16();
 
   //  Tell FastLED about the LED configuration
-  FastLED.addLeds<LED_TYPE, DATA_PIN0, COLOR_ORDER>(window0, NUM_LEDS).setCorrection(TypicalLEDStrip);
-  FastLED.addLeds<LED_TYPE, DATA_PIN1, COLOR_ORDER>(window1, NUM_LEDS).setCorrection(TypicalLEDStrip);
-  FastLED.addLeds<LED_TYPE, DATA_PIN2, COLOR_ORDER>(window2, NUM_LEDS).setCorrection(TypicalLEDStrip);
+  FastLED.addLeds<LED_TYPE, DATA_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
+  //  FastLED.addLeds<LED_TYPE, DATA_PIN0, COLOR_ORDER>(window0, NUM_LEDS).setCorrection(TypicalLEDStrip);
+  //  FastLED.addLeds<LED_TYPE, DATA_PIN1, COLOR_ORDER>(window1, NUM_LEDS).setCorrection(TypicalLEDStrip);
+  //  FastLED.addLeds<LED_TYPE, DATA_PIN2, COLOR_ORDER>(window2, NUM_LEDS).setCorrection(TypicalLEDStrip);
 
   // set master brightness control
   FastLED.setBrightness(BRIGHTNESS);
@@ -117,8 +142,8 @@ void setup()
   digitalWrite(red_button, HIGH);// turn on pullup resistors
   pinMode(blue_button, INPUT);
   digitalWrite(blue_button, HIGH);
-  pinMode(yellow_button, INPUT);
-  digitalWrite(yellow_button, HIGH);
+  pinMode(green_button, INPUT);
+  digitalWrite(green_button, HIGH);
   pinMode(buzzer, OUTPUT);
   pinMode(LockPin, OUTPUT);
   digitalWrite(LockPin, HIGH);
@@ -132,7 +157,7 @@ void setup()
 }
 
 
-uint8_t gHue = 0; 
+uint8_t gHue = 0;
 
 
 
@@ -141,7 +166,7 @@ void loop()
 
   debounceR.update();
   debounceB.update();
-  debounceY.update();
+  debounceG.update();
   startButton();
 
   if (gameWon == 1) {
@@ -160,7 +185,7 @@ void loop()
     // convert the noise data to colors in the LED array
     // using the current palette
     mapNoiseToLEDsUsingPalette();
-    LEDS.show();
+    FastLED.show();
     //  startGame();
     FastLED.delay(1000 / 30);
   }
@@ -176,58 +201,17 @@ void loop()
 }
 
 
-//void showPattern()
-//{
-//
-//  FastLED.setBrightness(255);
-//  fill_solid(window0, NUM_LEDS, CRGB::Black);
-//  fill_solid(window1, NUM_LEDS, CRGB::Black);
-//  fill_solid(window2, NUM_LEDS, CRGB::Black);
-//  FastLED.show();
-//
-//
-//  if (ledList[pattern] == 6) {
-//
-//    FastLED.setBrightness(255);
-//    fill_solid(window0, NUM_LEDS, CRGB::Yellow);
-//    FastLED.show();
-//
-//
-//
-//    tone(TonePin, Note[ledList[pattern] - 6]);
-//  }
-//
-//
-//    FastLED.setBrightness(255);
-//    fill_solid(window0, NUM_LEDS, CRGB::Black);
-//    fill_solid(window1, NUM_LEDS, CRGB::Black);
-//    fill_solid(window2, NUM_LEDS, CRGB::Black);
-//    FastLED.show();
-//
-//  }
-//
-//}
-
-
-
-
-
-
 void rainbowWithGlitter_2( uint8_t stripeDensity, uint8_t chanceOfGlitter)
 {
   // built-in FastLED rainbow, plus some random sparkly glitter
-  fill_rainbow( window0, NUM_LEDS, gHue, stripeDensity);
-  fill_rainbow( window1, NUM_LEDS, gHue, stripeDensity);
-  fill_rainbow( window2, NUM_LEDS, gHue, stripeDensity);
+  fill_rainbow( leds, NUM_LEDS, gHue, stripeDensity);
   addGlitter(chanceOfGlitter);
 }
 
 void addGlitter( fract8 chanceOfGlitter)
 {
   if ( random8() < chanceOfGlitter) {
-    window0[ random16(NUM_LEDS) ] += CRGB::White;
-    window1[ random16(NUM_LEDS) ] += CRGB::White;
-    window2[ random16(NUM_LEDS) ] += CRGB::White;
+    leds[ random16(NUM_LEDS) ] += CRGB::White;
   }
 }
 
@@ -299,9 +283,7 @@ void mapNoiseToLEDsUsingPalette()
       }
       currentPalette = CloudColors_p;
       CRGB color = ColorFromPalette( currentPalette, index, bri);
-      window0[XY(i, j)] = color;
-      window1[XY(i, j)] = color;
-      window2[XY(i, j)] = color;
+      leds[XY(i, j)] = color;
     }
   }
 
@@ -333,31 +315,31 @@ void playtone(int tone, int duration) {
 */
 void flash_red() {
   FastLED.setBrightness(255);
-  fill_solid(window0, NUM_LEDS, CRGB::Red);
+  fill_solid(leds, (topstart, toplength), CRGB::Red);
   FastLED.show();
   playtone(2273, wait);            // low A
   FastLED.setBrightness(255);
-  fill_solid(window0, NUM_LEDS, CRGB::Black);
+  fill_solid(leds, (topstart, toplength), CRGB::Black);
   FastLED.show();
 }
 
 void flash_blue() {
   FastLED.setBrightness(255);
-  fill_solid(window1, NUM_LEDS, CRGB::Blue);
+  fill_solid(leds, (centerstart, centerlength), CRGB::Blue);
   FastLED.show();
   playtone(1700, wait);            // D
   FastLED.setBrightness(255);
-  fill_solid(window1, NUM_LEDS, CRGB::Black);
+  fill_solid(leds, (centerstart, centerlength), CRGB::Black);
   FastLED.show();
 }
 
-void flash_yellow() {
+void flash_green() {
   FastLED.setBrightness(255);
-  fill_solid(window2, NUM_LEDS, CRGB::Yellow);
+  fill_solid(leds, (bottomstart, bottomlength), CRGB::Green);
   FastLED.show();
   playtone(1275, wait);            // G
   FastLED.setBrightness(255);
-  fill_solid(window2, NUM_LEDS, CRGB::Black);
+  fill_solid(leds, (bottomstart, bottomlength), CRGB::Black);
   FastLED.show();
 }
 
@@ -366,7 +348,7 @@ void flash_yellow() {
 void runtest() {
   flash_red();
   flash_blue();
-  flash_yellow();
+  flash_green();
 }
 
 /* a function to flash the LED corresponding to what is held
@@ -381,7 +363,7 @@ void squark(long led) {
       flash_blue();
       break;
     case 2:
-      flash_yellow();
+      flash_green();
       break;
   }
   delay(50);
@@ -432,7 +414,7 @@ void readSequence() {
       if ((debounceB.read()) == true) {  // Blue button
         input = 1;
       }
-      if ((debounceY.read()) == true) { // Yellow button
+      if ((debounceG.read()) == true) { // Green button
         input = 2;
       }
 
@@ -457,7 +439,7 @@ void readSequence() {
 
 void startButton()
 {
-  if ((debounceY.read()) == true) {
+  if ((debounceG.read()) == true) {
     playGame = 1;
   }
   if ((debounceR.read()) == true) {
