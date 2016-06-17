@@ -386,7 +386,7 @@ void resetCount() {
 // function to build and play the sequence
 void playSequence() {
   FastLED.setBrightness(255);      //Clear LEDS so there isnt any left over color info from the idle animation.
-  fill_solid(leds, NUM_LED, CRGB::Black);
+  fill_solid(leds, NUM_LEDS, CRGB::Black);
   FastLED.show();
 
   sequence[count] = random(3);       // add a new value to sequence
@@ -444,14 +444,10 @@ void startButton()
 }
 
 //
-//void confetti_2( uint8_t colorVariation, uint8_t fadeAmount)
-//{
-//  // random colored speckles that blink in and fade smoothly
-//  fadeToBlackBy( window0, NUM_LEDS, fadeAmount);
-//  fadeToBlackBy( window1, NUM_LEDS, fadeAmount);
-//  fadeToBlackBy( window2, NUM_LEDS, fadeAmount);
-//  int pos = random16(NUM_LEDS);
-//  window0[pos] += CHSV( gHue + random8(colorVariation), 200, 255);
-//  window1[pos] += CHSV( gHue + random8(colorVariation), 200, 255);
-//  window2[pos] += CHSV( gHue + random8(colorVariation), 200, 255);
-//}
+void confetti_2( uint8_t colorVariation, uint8_t fadeAmount)
+{
+  // random colored speckles that blink in and fade smoothly
+  fadeToBlackBy( leds, NUM_LEDS, fadeAmount);
+  int pos = random16(NUM_LEDS);
+  leds[pos] += CHSV( gHue + random8(colorVariation), 200, 255);
+}
