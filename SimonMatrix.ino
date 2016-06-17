@@ -1,5 +1,15 @@
-/* 3 panel cpacitive touch "Simon Says" Door game
-    2016 -Sigmaz */
+/* 3 panel Simon puzzle door The door has 3 window panels 
+ *  top center and bottom. each panel is approx 20x18 behind each panel are 13 WS2812B LED's 
+ *  as well as aluminum window screening. the screen is used as a capacitive sensor antennae for each panel.
+ *  when the door is idle, noise animations are displayed on the diffused glass panes 
+ *  in a matrix when touch is detected the module switches to Simon mode and the user plays. 
+ *  Once the final round is reached the MCU takes pin 13 low and congratulates the player with 
+ *  a little tune and glitter rainbows..
+ *  2016 Jon Bruno(SigmazGFX) for Klues Escape Room, Stroudsburg PA
+ */
+   
+   
+ 
 #include "Debounce.h"
 #include "FastLED.h"
 FASTLED_USING_NAMESPACE
@@ -52,9 +62,9 @@ uint16_t speed = 20; // speed is set dynamically once we've started up
 uint16_t scale = 30; // scale is set dynamically once we've started up
 uint8_t noise[MAX_DIMENSION][MAX_DIMENSION];
 CRGBPalette16 currentPalette( CRGB::Black );
-
 CRGBPalette16 targetPalette( CRGB::Black );
-uint8_t       colorLoop = 1;
+uint8_t colorLoop = 1;
+uint8_t gHue = 0;
 
 
 // Params for width and height
@@ -92,9 +102,6 @@ const uint8_t ArrayTable[] = {
   36, 40, 37, 39, 38
 };
 
-
-
-
 #define LAST_VISIBLE_LED 38
 uint8_t XY( uint8_t x, uint8_t y)
 {
@@ -102,16 +109,6 @@ uint8_t XY( uint8_t x, uint8_t y)
   if ( (x >= kMatrixWidth) || (y >= kMatrixHeight) ) {
     return (LAST_VISIBLE_LED + 1);
   }
-
-  //  const uint8_t ArrayTable[] = {
-  //    0, 25, 1, 24, 2,
-  //    21, 4, 22, 3, 23,
-  //    5, 20, 6, 19, 7,
-  //    16, 9, 17, 8, 18,
-  //    10, 15, 11, 14, 12
-  //  };
-
-
 
   uint8_t i = (y * kMatrixWidth) + x;
   uint8_t j = ArrayTable[i];
@@ -129,9 +126,6 @@ void setup()
 
   //  Tell FastLED about the LED configuration
   FastLED.addLeds<LED_TYPE, DATA_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
-  //  FastLED.addLeds<LED_TYPE, DATA_PIN0, COLOR_ORDER>(window0, NUM_LEDS).setCorrection(TypicalLEDStrip);
-  //  FastLED.addLeds<LED_TYPE, DATA_PIN1, COLOR_ORDER>(window1, NUM_LEDS).setCorrection(TypicalLEDStrip);
-  //  FastLED.addLeds<LED_TYPE, DATA_PIN2, COLOR_ORDER>(window2, NUM_LEDS).setCorrection(TypicalLEDStrip);
 
   // set master brightness control
   FastLED.setBrightness(BRIGHTNESS);
@@ -155,10 +149,6 @@ void setup()
 
   //-----------------------------------
 }
-
-
-uint8_t gHue = 0;
-
 
 
 void loop()
@@ -395,6 +385,10 @@ void resetCount() {
 
 // function to build and play the sequence
 void playSequence() {
+  FastLED.setBrightness(255);      //Clear LEDS so there isnt any left over color info from the idle animation.
+  fill_solid(leds, NUM_LED, CRGB::Black);
+  FastLED.show();
+
   sequence[count] = random(3);       // add a new value to sequence
   for (int i = 0; i < count; i++) {  // loop for sequence length
     squark(sequence[i]);             // flash/beep
