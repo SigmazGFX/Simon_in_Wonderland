@@ -28,9 +28,6 @@ const uint8_t kMatrixHeight = 15;
 #define MAX_DIMENSION ((kMatrixWidth>kMatrixHeight) ? kMatrixWidth : kMatrixHeight)
 
 CRGB leds[NUM_LEDS];
-//CRGB window0[NUM_LEDS];
-//CRGB window1[NUM_LEDS];
-//CRGB window2[NUM_LEDS];
 #define BRIGHTNESS  64
 #define LockPin 13
 
@@ -141,8 +138,7 @@ void setup()
   pinMode(buzzer, OUTPUT);
   pinMode(LockPin, OUTPUT);
   digitalWrite(LockPin, HIGH);
-  Serial.begin(115200);
-
+  
 
   //-------------game stuff------------
   randomSeed(analogRead(5));     // random seed for sequence generation
