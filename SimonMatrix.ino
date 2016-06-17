@@ -18,9 +18,6 @@ const uint8_t kMatrixHeight = 15;
 #define MAX_DIMENSION ((kMatrixWidth>kMatrixHeight) ? kMatrixWidth : kMatrixHeight)
 
 CRGB leds[NUM_LEDS];
-//CRGB window0[NUM_LEDS];
-//CRGB window1[NUM_LEDS];
-//CRGB window2[NUM_LEDS];
 #define BRIGHTNESS  64
 #define LockPin 13
 
@@ -92,10 +89,8 @@ const uint8_t ArrayTable[] = {
   36, 40, 37, 39, 38
 };
 
-
-
-
 #define LAST_VISIBLE_LED 38
+uint8_t gHue = 0;
 uint8_t XY( uint8_t x, uint8_t y)
 {
   // any out of bounds address maps to the first hidden pixel
@@ -103,22 +98,10 @@ uint8_t XY( uint8_t x, uint8_t y)
     return (LAST_VISIBLE_LED + 1);
   }
 
-  //  const uint8_t ArrayTable[] = {
-  //    0, 25, 1, 24, 2,
-  //    21, 4, 22, 3, 23,
-  //    5, 20, 6, 19, 7,
-  //    16, 9, 17, 8, 18,
-  //    10, 15, 11, 14, 12
-  //  };
-
-
-
   uint8_t i = (y * kMatrixWidth) + x;
   uint8_t j = ArrayTable[i];
   return j;
 }
-
-
 
 void setup()
 {
@@ -129,10 +112,7 @@ void setup()
 
   //  Tell FastLED about the LED configuration
   FastLED.addLeds<LED_TYPE, DATA_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
-  //  FastLED.addLeds<LED_TYPE, DATA_PIN0, COLOR_ORDER>(window0, NUM_LEDS).setCorrection(TypicalLEDStrip);
-  //  FastLED.addLeds<LED_TYPE, DATA_PIN1, COLOR_ORDER>(window1, NUM_LEDS).setCorrection(TypicalLEDStrip);
-  //  FastLED.addLeds<LED_TYPE, DATA_PIN2, COLOR_ORDER>(window2, NUM_LEDS).setCorrection(TypicalLEDStrip);
-
+ 
   // set master brightness control
   FastLED.setBrightness(BRIGHTNESS);
   //end LED setup------------------------------
@@ -148,18 +128,10 @@ void setup()
   pinMode(LockPin, OUTPUT);
   digitalWrite(LockPin, HIGH);
   Serial.begin(115200);
-
-
-  //-------------game stuff------------
   randomSeed(analogRead(5));     // random seed for sequence generation
-
-  //-----------------------------------
+  
+    
 }
-
-
-uint8_t gHue = 0;
-
-
 
 void loop()
 {
@@ -195,9 +167,6 @@ void loop()
     readSequence();  // read the sequence
     delay(1000);     // wait a sec
   }
-
-
-
 }
 
 
