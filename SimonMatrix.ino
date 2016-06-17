@@ -1,6 +1,6 @@
 /* 3 panel cpacitive touch "Simon Says" Door game
     2016 -Sigmaz */
-
+#include "Debounce.h"
 #include "FastLED.h"
 FASTLED_USING_NAMESPACE
 #if FASTLED_VERSION < 3001000
@@ -8,9 +8,9 @@ FASTLED_USING_NAMESPACE
 #endif
 
 #define LOCK_PIN    13 // Pin to control the lock
-#define DATA_PIN0   3  // Top Window
-#define DATA_PIN1   4  // Middle Window
-#define DATA_PIN2   5  // Bottom Window
+#define DATA_PIN0   6  // Top Window
+#define DATA_PIN1   7  // Middle Window
+#define DATA_PIN2   8  // Bottom Window
 #define LED_TYPE    WS2812B
 #define COLOR_ORDER GRB
 const uint8_t kMatrixWidth = 5;
@@ -21,35 +21,26 @@ CRGB window0[NUM_LEDS];
 CRGB window1[NUM_LEDS];
 CRGB window2[NUM_LEDS];
 #define BRIGHTNESS  64
-
-#define Num_of_Panes 3 // number of buttons and/or LEDs Used
 #define LockPin 13
-#define SequenceLength 5 // max lenght of the pattern
-#define NumRounds  5 // How many winning rounds until unlock
-#define TonePin 12 // pin for the Piezo 
 
-const byte LEDgroup[Num_of_Panes] = {1, 2, 3}; // flags for the 3 glass panes
+const int red_button = 2;      // Input pins for the buttons
+const int blue_button = 3;
+const int yellow_button = 4;
 
-const byte ButtonPin[Num_of_Panes] = {6, 7, 8}; //Pins that the buttons are on
+// Instantiate a Debounce object with a 20 millisecond debounce time
+Debounce debounceR = Debounce( 20 , red_button );
+Debounce debounceB = Debounce( 20 , blue_button );
+Debounce debounceY = Debounce( 20 , yellow_button );
 
-const int Note[Num_of_Panes] = {165, 330, 659}; // tone per LED
-
-byte ledList[SequenceLength]; // starting pattern
-byte buttonState[Num_of_Panes] = {0, 0, 0}; // button state holder
-byte lastButtonState[Num_of_Panes] = {0, 0, 0}; // store old button state for compare
-
-byte Pat_count = 0; // number of LEDs in starting pattern
-int Btemp = 0; // temporary button pin holder
-unsigned int Speed = 300; // pattern display speed
-byte count = 0; // cycle through button pins
-
-unsigned long lastDebounceTime[Num_of_Panes]; // record last time button was pressed
-unsigned long time; // record initial time for pattern blinks
-
+const int buzzer = 5;     // Output pin for the buzzer
+long sequence[20];             // Array to hold sequence
+int count = 0;                 // Sequence counter
+long input = 5;                // Button indicator
+int wait = 500;                // Variable delay as sequence gets longer
 
 int gameWon = 0; //did they win the game
 int playGame = 0; // game start switch
-bool PatternStatus = false; // toggle whether player has won or not
+
 
 //=MATRIX DEFINES==========================================================================================
 // The 16 bit version of our coordinates
@@ -121,31 +112,40 @@ void setup()
   FastLED.setBrightness(BRIGHTNESS);
   //end LED setup------------------------------
 
+
+  pinMode(red_button, INPUT);    // configure buttons on inputs
+  digitalWrite(red_button, HIGH);// turn on pullup resistors
+  pinMode(blue_button, INPUT);
+  digitalWrite(blue_button, HIGH);
+  pinMode(yellow_button, INPUT);
+  digitalWrite(yellow_button, HIGH);
+  pinMode(buzzer, OUTPUT);
   pinMode(LockPin, OUTPUT);
   digitalWrite(LockPin, HIGH);
-  randomSeed(analogRead(A4) / analogRead(A5)); // set a seed value upon start up
   Serial.begin(115200);
-  for (int cnt = 0; cnt < Num_of_Panes; cnt++) // initialize LED pins and buttons
-  {
 
-    pinMode(ButtonPin[cnt], INPUT_PULLUP);
 
-    ledList[cnt] = random(0, 3); // Random Number from 0 - 2.. could also use random(3)
-    Pat_count++;
-  }
+  //-------------game stuff------------
+  randomSeed(analogRead(5));     // random seed for sequence generation
+
+  //-----------------------------------
 }
 
 
-uint8_t gHue = 0; // rotating "base color" used by many of the patterns
+uint8_t gHue = 0; 
 
 
 
 void loop()
 {
 
-  startGame();
+  debounceR.update();
+  debounceB.update();
+  debounceY.update();
+  startButton();
 
   if (gameWon == 1) {
+    gHue++;
     digitalWrite(LockPin, LOW);
     rainbowWithGlitter_2(10, 80);
     FastLED.setBrightness(255);
@@ -154,179 +154,63 @@ void loop()
   }
 
   if (playGame == 0) {
-    FastLED.setBrightness(64);
+    FastLED.setBrightness(128);
     // generate noise data
     fillnoise8();
     // convert the noise data to colors in the LED array
     // using the current palette
     mapNoiseToLEDsUsingPalette();
+    LEDS.show();
+    //  startGame();
+    FastLED.delay(1000 / 30);
   }
 
   if (playGame == 1) {
-    showPattern(); // display the LED pattern
-    VerifyButtons(); // wait for button presses and check to see button presses match LEDs that were lit
+    playSequence();  // play the sequence
+    readSequence();  // read the sequence
+    delay(1000);     // wait a sec
   }
-}
-
-void showPattern()
-{
-  for (byte pattern = 0; pattern < Pat_count; pattern++) // cycle through LED pattern and blink them
-  {
-    time = millis();
-    while (millis() - time < Speed)
-    {
-      //digitalWrite(ledList[ pattern ], HIGH);
-
-      //FASTLED implementation?
-      if (ledList[pattern] == 0) { // Im not sure if I use (ledList[pattern]) or just pattern to select the window..
-
-        FastLED.setBrightness(255);
-        fill_solid(window0, NUM_LEDS, CRGB::Yellow);
-        FastLED.show();
-
-      }
-      if (ledList[pattern] == 1) {  // Im not sure if I use (ledList[pattern]) or just pattern to select the window..
-
-        FastLED.setBrightness(255);
-        fill_solid(window1, NUM_LEDS, CRGB::Green);
-        FastLED.show();
-
-      }
-      if (ledList[pattern] == 2) {  // Im not sure if I use (ledList[pattern]) or just pattern to select the window..
-
-        FastLED.setBrightness(255);
-        fill_solid(window2, NUM_LEDS, CRGB::Blue);
-        FastLED.show();
-
-      }
-
-      tone(TonePin, Note[ledList[pattern] - 6]);
-    }
-
-    time = millis();
-    while (millis() - time < Speed)
-    {
-      noTone(TonePin);
 
 
-      FastLED.setBrightness(255);
-      fill_solid(window0, NUM_LEDS, CRGB::Black);
-      fill_solid(window1, NUM_LEDS, CRGB::Black);
-      fill_solid(window2, NUM_LEDS, CRGB::Black);
-      FastLED.show();
-
-    }
-
-  }
-}
-
-
-void VerifyButtons()
-{
-  static byte i;
-  i = 0;
-
-  while (i < Pat_count)
-  {
-    Btemp = Getbutton(); // get a value from Getbutton function
-    if (Btemp != -1) // filter out no button press "0"
-    {
-      tone(TonePin, Note[Btemp - 2]);
-
-      //Serial.println(Btemp); // debug purpose
-      if (ledList[i] == (Btemp + Num_of_Panes)) // compare button pressed to LED lit
-      {
-        i++; // each correct button press, increments ledList to check the next LED
-        PatternStatus = true;
-      }
-      else // If at any time a button was incorrect, set PatternStatus to false to show losing message then get out of while loop
-      {
-        PatternStatus = false;
-        FastLED.setBrightness(255);
-        fill_solid(window0, NUM_LEDS, CRGB::Red);
-        fill_solid(window1, NUM_LEDS, CRGB::Red);
-        fill_solid(window2, NUM_LEDS, CRGB::Red);
-        FastLED.show();
-        tone(TonePin, 90);
-        delay(500);
-        tone(TonePin, 90);
-        delay(500);
-        int playGame = 0;
-        noTone(TonePin);
-        break;
-      }
-    }
-    else
-    {
-      noTone(TonePin);
-      //Serial.println(F("Times Up"));
-      FastLED.setBrightness(255);
-      fill_solid(window0, NUM_LEDS, CRGB::Red);
-      fill_solid(window1, NUM_LEDS, CRGB::Red);
-      fill_solid(window2, NUM_LEDS, CRGB::Red);
-      FastLED.show();
-      tone(TonePin, 90);
-      delay(500);
-      tone(TonePin, 90);
-      delay(500);
-      int playGame = 0;
-      noTone(TonePin);
-      PatternStatus = false;
-      break;
-    }
-  }
-  if (PatternStatus == true) // button pattern matched all shown LEDs
-  {
-    Speed -= 9; // increase pattern speed, by lowering Speed value
-    Serial.println(F("Pattern was Good"));
-    updatePattern();
-  }
-  else Serial.println(F("Player Lost"));
 
 }
 
 
+//void showPattern()
+//{
+//
+//  FastLED.setBrightness(255);
+//  fill_solid(window0, NUM_LEDS, CRGB::Black);
+//  fill_solid(window1, NUM_LEDS, CRGB::Black);
+//  fill_solid(window2, NUM_LEDS, CRGB::Black);
+//  FastLED.show();
+//
+//
+//  if (ledList[pattern] == 6) {
+//
+//    FastLED.setBrightness(255);
+//    fill_solid(window0, NUM_LEDS, CRGB::Yellow);
+//    FastLED.show();
+//
+//
+//
+//    tone(TonePin, Note[ledList[pattern] - 6]);
+//  }
+//
+//
+//    FastLED.setBrightness(255);
+//    fill_solid(window0, NUM_LEDS, CRGB::Black);
+//    fill_solid(window1, NUM_LEDS, CRGB::Black);
+//    fill_solid(window2, NUM_LEDS, CRGB::Black);
+//    FastLED.show();
+//
+//  }
+//
+//}
 
-void updatePattern() // if player has entered buttons correctly add a new LED to ledList
-{
-  if (Pat_count > NumRounds)
-    int gameWon = 1 ; //show gamewon rainbow animation and unlock the door.
-  else
-    Pat_count++;
-  ledList[Pat_count - 1] = random(5, 7); // Im not sure what this value is used for or why they set Pat_count - 1 to 6?
-}
 
-int Getbutton()
-{
-  static unsigned long timeOut = 2000, countDown;
-  countDown = millis();
 
-  while (millis() - countDown <= timeOut)
-  {
-    for (count = 0; count < Num_of_Panes; count++) // loop through all the buttons
-    {
-      buttonState[count] = digitalRead(ButtonPin[count]); // read button states
 
-      if (buttonState[count] != lastButtonState[count]) // check to see if the state has changed from last press
-
-      {
-        if (buttonState[count] == LOW)
-        {
-          lastDebounceTime[count] = millis();// record the time of the last press
-          lastButtonState[count] = buttonState[count]; // update old button state for next checking
-        }
-      }
-      if ((millis() - lastDebounceTime[count]) > 50UL)
-      {
-        if (buttonState[count] == LOW)
-        {
-          return ButtonPin[count];
-        }
-      }
-    }
-  }
-  return -1; // return button pin pressed
-}
 
 
 void rainbowWithGlitter_2( uint8_t stripeDensity, uint8_t chanceOfGlitter)
@@ -426,43 +310,161 @@ void mapNoiseToLEDsUsingPalette()
 
 
 
-void startGame()
-{
-  for (count = 0; count < Num_of_Panes; count++) // loop through all the buttons
+//-----------------------------------GAME SECTION---------------------------------
 
-  {
-    buttonState[count] = digitalRead(ButtonPin[count]); // read button states
-
-    if (buttonState[count] != lastButtonState[count]) // check to see if the state has changed from last press
-
-    {
-      if (buttonState[count] == LOW)
-      {
-        lastDebounceTime[count] = millis();// record the time of the last press
-        lastButtonState[count] = buttonState[count]; // update old button state for next checking
-      }
-    }
-
-    if ((millis() - lastDebounceTime[count]) > 50UL)
-    {
-      if (buttonState[count] == LOW)
-      {
-        int playGame = 1;
-      }
-    }
-
+/*
+  playtone function taken from Oomlout sample
+  takes a tone variable that is half the period of desired frequency
+  and a duration in milliseconds
+*/
+void playtone(int tone, int duration) {
+  for (long i = 0; i < duration * 1000L; i += tone * 2) {
+    digitalWrite(buzzer, HIGH);
+    delayMicroseconds(tone);
+    digitalWrite(buzzer, LOW);
+    delayMicroseconds(tone);
   }
 }
 
-//
-//void confetti_2( uint8_t colorVariation, uint8_t fadeAmount)
-//{
-//  // random colored speckles that blink in and fade smoothly
-//  fadeToBlackBy( window0, NUM_LEDS, fadeAmount);
-//  fadeToBlackBy( window1, NUM_LEDS, fadeAmount);
-//  fadeToBlackBy( window2, NUM_LEDS, fadeAmount);
-//  int pos = random16(NUM_LEDS);
-//  window0[pos] += CHSV( gHue + random8(colorVariation), 200, 255);
-//  window1[pos] += CHSV( gHue + random8(colorVariation), 200, 255);
-//  window2[pos] += CHSV( gHue + random8(colorVariation), 200, 255);
-//}
+
+/*
+  functions to flash LEDs and play corresponding tones
+  very simple - turn LED on, play tone for .5s, turn LED off
+*/
+void flash_red() {
+  FastLED.setBrightness(255);
+  fill_solid(window0, NUM_LEDS, CRGB::Red);
+  FastLED.show();
+  playtone(2273, wait);            // low A
+  FastLED.setBrightness(255);
+  fill_solid(window0, NUM_LEDS, CRGB::Black);
+  FastLED.show();
+}
+
+void flash_blue() {
+  FastLED.setBrightness(255);
+  fill_solid(window1, NUM_LEDS, CRGB::Blue);
+  FastLED.show();
+  playtone(1700, wait);            // D
+  FastLED.setBrightness(255);
+  fill_solid(window1, NUM_LEDS, CRGB::Black);
+  FastLED.show();
+}
+
+void flash_yellow() {
+  FastLED.setBrightness(255);
+  fill_solid(window2, NUM_LEDS, CRGB::Yellow);
+  FastLED.show();
+  playtone(1275, wait);            // G
+  FastLED.setBrightness(255);
+  fill_solid(window2, NUM_LEDS, CRGB::Black);
+  FastLED.show();
+}
+
+
+// a simple test function to flash all of the LEDs in turn
+void runtest() {
+  flash_red();
+  flash_blue();
+  flash_yellow();
+}
+
+/* a function to flash the LED corresponding to what is held
+  in the sequence
+*/
+void squark(long led) {
+  switch (led) {
+    case 0:
+      flash_red();
+      break;
+    case 1:
+      flash_blue();
+      break;
+    case 2:
+      flash_yellow();
+      break;
+  }
+  delay(50);
+}
+
+// function to congratulate winning sequence
+void congratulate() {
+  playtone(1014, 250);               // play a jingle
+  delay(25);
+  playtone(1014, 250);
+  delay(25);
+  playtone(1014, 250);
+  delay(25);
+  playtone(956, 500);
+  delay(25);
+  playtone(1014, 250);
+  delay(25);
+  playtone(956, 500);
+  delay(2000);
+  resetCount();         // reset sequence
+  gameWon = 1;
+
+}
+
+// function to reset after winning or losing
+void resetCount() {
+  count = 0;
+  wait = 500;
+}
+
+// function to build and play the sequence
+void playSequence() {
+  sequence[count] = random(3);       // add a new value to sequence
+  for (int i = 0; i < count; i++) {  // loop for sequence length
+    squark(sequence[i]);             // flash/beep
+  }
+  wait = 500 - (count * 15);         // vary delay
+  count++;                           // increment sequence length
+}
+
+// function to read sequence from player
+void readSequence() {
+  for (int i = 1; i < count; i++) {             // loop for sequence length
+    while (input == 5) {                       // wait until button pressed
+      if ((debounceR.read()) == true) {  // Red button
+        input = 0;
+      }
+      if ((debounceB.read()) == true) {  // Blue button
+        input = 1;
+      }
+      if ((debounceY.read()) == true) { // Yellow button
+        input = 2;
+      }
+
+    }
+    if (sequence[i - 1] == input) {            // was it the right button?
+      squark(input);                           // flash/buzz
+      if (i == 20) {                           // check for correct sequence of 20
+        congratulate();                        // congratulate the winner
+      }
+    }
+    else {
+      playtone(4545, 1000);                  // low tone for fail
+      squark(sequence[i - 1]);               // double flash for the right colour
+      squark(sequence[i - 1]);
+      resetCount();                          // reset sequence
+      playGame = 0;
+    }
+    input = 5;                                   // reset input
+  }
+}
+
+
+void startButton()
+{
+  if ((debounceY.read()) == true) {
+    playGame = 1;
+  }
+  if ((debounceR.read()) == true) {
+    playGame = 1;
+  }
+  if ((debounceB.read()) == true) {
+    playGame = 1;
+  }
+}
+
