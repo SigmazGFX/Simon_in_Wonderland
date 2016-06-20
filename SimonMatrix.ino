@@ -49,6 +49,10 @@ int wait = 500;                // Variable delay as sequence gets longer
 int gameWon = 0; //did they win the game
 int playGame = 0; // game start switch
 int maxRounds = 10; // number of game rounds (also the max number of lights in a pattern)
+int roundExpire = 3000; //Seconds each game round can wait before failing without input
+long roundTime; // when the round started
+
+
 
 //=MATRIX DEFINES==========================================================================================
 // The 16 bit version of our coordinates
@@ -405,50 +409,56 @@ void playSequence() {
 // function to read sequence from player
 void readSequence() {
 
-
   for (int i = 1; i < count; i++) {             // loop for sequence length
-    Serial.println(input);
+    roundTime = millis();                      // set roundTime with the current millis value
 
+    if (millis() <= roundTime + roundExpire)  // if millis is less than roundTime + roundTimeout
+    {
+      while (input == 5) {                    // wait until button pressed
 
-    while (input == 5) {                       // wait until button pressed
+        checkButtons();
+        if (debounceR.read() == true) {  // Red button
+          input = 0;
+          //Serial.println("R ");
+        }
+        if (debounceB.read() == true) {  // Blue button
+          input = 1;
+          // Serial.println("B ");
+        }
+        if (debounceG.read() == true) { // Green button
+          input = 2;
+          // Serial.println("G ");
+        }
 
-      checkButtons();
-      if (debounceR.read() == true) {  // Red button
-        input = 0;
-        //Serial.println("R ");
       }
-      if (debounceB.read() == true) {  // Blue button
-        input = 1;
-        // Serial.println("B ");
+      if (sequence[i - 1] == input) {            // was it the right button?
+        squark(input);                           // flash/buzz
+        if (i == maxRounds) {                    // check if the player has gotten past the final round
+          congratulate();                        // congratulate the winner
+        }
+      } else {
+        playtone(4545, 1000);                    // low tone for fail
+        squark(sequence[i - 1]);                // double flash for the right colour
+        squark(sequence[i - 1]);
+        resetCount();                           // reset sequence
+        playGame = 0;
       }
-      if (debounceG.read() == true) { // Green button
-        input = 2;
-        // Serial.println("G ");
-      }
-
-    }
-    if (sequence[i - 1] == input) {            // was it the right button?
-      squark(input);                           // flash/buzz
-      if (i == maxRounds) {                    // check if the player has gotten past the final round
-        congratulate();                        // congratulate the winner
-      }
-    }
-    else {
-      playtone(4545, 1000);                  // low tone for fail
-      squark(sequence[i - 1]);               // double flash for the right colour
-      squark(sequence[i - 1]);
-      resetCount();                          // reset sequence
+      input = 5;                                // reset input
+    } else {
+      playtone(4545, 1000);                     // low tone for input timeout
+      resetCount();                            // reset sequence
       playGame = 0;
     }
-    input = 5;                                   // reset input
+    input = 5;                                 // reset input
   }
 }
+
+
 
 void checkButtons() {
   debounceR.update();
   debounceB.update();
   debounceG.update();
-  //Serial.println("checked");
 }
 
 
