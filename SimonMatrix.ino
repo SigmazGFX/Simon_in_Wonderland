@@ -80,12 +80,12 @@ uint8_t gHue = 0;
 
 // Params for width and height
 
-int topstart = 0;
-int toplength = 13;
-int centerstart = 13;
-int centerlength = 13;
-int bottomstart = 26;
-int bottomlength = 13;
+int topMatrixstart = 0;
+int topMatrixlength = 13;
+int centerMatrixstart = 13;
+int centerMatrixlength = 13;
+int bottomMatrixstart = 26;
+int bottomMatrixlength = 13;
 
 // This function will return the right 'led index number' for
 // a given set of X and Y coordinates on your RGB Shades.
@@ -139,12 +139,12 @@ void setup()
   y = random16();
   z = random16();
 
-  //  Tell FastLED about the LED configuration
-  FastLED.addLeds<LED_TYPE, DATA_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
 
-  // set master brightness control
-  FastLED.setBrightness(BRIGHTNESS);
-  //end LED setup------------------------------
+  FastLED.addLeds<LED_TYPE, DATA_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip); //  Tell FastLED about the LED configuration
+
+
+  FastLED.setBrightness(BRIGHTNESS); // set master brightness control
+
 
 
   pinMode(red_button, INPUT);    // configure buttons on inputs
@@ -156,12 +156,7 @@ void setup()
   pinMode(buzzer, OUTPUT);
   pinMode(LOCK_PIN, OUTPUT);
   digitalWrite(LOCK_PIN, HIGH);
-
-
-  //-------------game stuff------------
   randomSeed(analogRead(5));     // random seed for sequence generation
-
-  //-----------------------------------
 }
 
 
@@ -331,31 +326,31 @@ void playtone(int tone, int duration) {
 */
 void flash_red() {
   FastLED.setBrightness(255);
-  fill_solid(leds + topstart, toplength, CRGB::Red);
+  fill_solid(leds + topMatrixstart, topMatrixlength, CRGB::Red);
   FastLED.show();
   playtone(2273, wait);            // low A
   FastLED.setBrightness(255);
-  fill_solid(leds + topstart, toplength, CRGB::Black);
+  fill_solid(leds + topMatrixstart, topMatrixlength, CRGB::Black);
   FastLED.show();
 }
 
 void flash_blue() {
   FastLED.setBrightness(255);
-  fill_solid(leds + centerstart, centerlength, CRGB::Blue);
+  fill_solid(leds + centerMatrixstart, centerMatrixlength, CRGB::Blue);
   FastLED.show();
   playtone(1700, wait);            // D
   FastLED.setBrightness(255);
-  fill_solid(leds + centerstart, centerlength, CRGB::Black);
+  fill_solid(leds + centerMatrixstart, centerMatrixlength, CRGB::Black);
   FastLED.show();
 }
 
 void flash_green() {
   FastLED.setBrightness(255);
-  fill_solid(leds + bottomstart, bottomlength, CRGB::Green);
+  fill_solid(leds + bottomMatrixstart, bottomMatrixlength, CRGB::Green);
   FastLED.show();
   playtone(1275, wait);            // G
   FastLED.setBrightness(255);
-  fill_solid(leds + bottomstart, bottomlength, CRGB::Black);
+  fill_solid(leds + bottomMatrixstart, bottomMatrixlength, CRGB::Black);
   FastLED.show();
 }
 
@@ -412,6 +407,7 @@ void resetCount() {
 
 // function to build and play the sequence
 void playSequence() {
+
   FastLED.setBrightness(255);      //Clear LEDS so there isnt any left over color info from the idle animation.
   fill_solid(leds, NUM_LEDS, CRGB::Black);
   FastLED.show();
@@ -471,20 +467,10 @@ void readSequence() {
   }
 }
 
-
-
-void checkButtons() {
-  debounceR.update();
-  debounceB.update();
-  debounceG.update();
-}
-
 void gameReset()
 {
-  debounceR.update();
-  debounceB.update();
-  debounceG.update();
 
+  checkButtons();
   if (gameReset1 == 1 && gameReset2 == 1 && gameReset3 == 1) {
     resetShift = 1;
   }
@@ -521,9 +507,7 @@ void gameReset()
 void startButton()
 {
 
-  debounceR.update();
-  debounceB.update();
-  debounceG.update();
+  checkButtons();
 
   if (debounceG.read() == true) {
     Serial.println ("G ");
@@ -538,6 +522,14 @@ void startButton()
     playGame = 1;
   }
 }
+
+
+void checkButtons() {
+  debounceR.update();
+  debounceB.update();
+  debounceG.update();
+}
+
 
 //
 void confetti_2( uint8_t colorVariation, uint8_t fadeAmount)
