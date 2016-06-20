@@ -1,15 +1,15 @@
-/* Simon puzzle door 
- *  The door has 3 window panels top center and bottom. each panel is approx 20x18 behind each panel are 13 WS2812B LED's 
- *  as well as aluminum window screening. the screen is used as a capacitive sensor antennae for each panel.
- *  when the door is idle, noise animations are displayed on the diffused glass panes 
- *  in a matrix when touch is detected the module switches to Simon mode and the user plays. 
- *  Once the final round is reached the MCU takes pin 13 low and congratulates the player with 
- *  a little tune and glitter rainbows..
- *  2016 Jon Bruno(SigmazGFX) for Klues Escape Room, Stroudsburg PA
- */
-   
-   
- 
+/* Simon puzzle door
+    The door has 3 window panels top center and bottom. each panel is approx 20x18 behind each panel are 13 WS2812B LED's
+    as well as aluminum window screening. the screen is used as a capacitive sensor antennae for each panel.
+    when the door is idle, noise animations are displayed on the diffused glass panes
+    in a matrix when touch is detected the module switches to Simon mode and the user plays.
+    Once the final round is reached the MCU takes pin 13 low and congratulates the player with
+    a little tune and glitter rainbows..
+    2016 Jon Bruno(SigmazGFX) for Klues Escape Room, Stroudsburg PA
+*/
+
+
+
 #include "Debounce.h"
 #include "FastLED.h"
 FASTLED_USING_NAMESPACE
@@ -40,7 +40,7 @@ Debounce debounceR = Debounce( 20 , red_button );
 Debounce debounceB = Debounce( 20 , blue_button );
 Debounce debounceG = Debounce( 20 , green_button );
 
-const int buzzer = 5;     // Output pin for the buzzer
+const int buzzer = 11;     // Output pin for the buzzer
 long sequence[20];             // Array to hold sequence
 int count = 0;                 // Sequence counter
 long input = 5;                // Button indicator
@@ -117,6 +117,10 @@ uint8_t XY( uint8_t x, uint8_t y)
 void setup()
 {
   delay(3000); // 3 second delay for recovery
+
+  Serial.begin(9600);
+
+
   x = random16();
   y = random16();
   z = random16();
@@ -130,15 +134,15 @@ void setup()
 
 
   pinMode(red_button, INPUT);    // configure buttons on inputs
-  digitalWrite(red_button, HIGH);// turn on pullup resistors
-  pinMode(blue_button, INPUT);
-  digitalWrite(blue_button, HIGH);
-  pinMode(green_button, INPUT);
-  digitalWrite(green_button, HIGH);
+  digitalWrite(red_button, LOW);
+  pinMode(blue_button, INPUT_PULLUP);
+  //digitalWrite(blue_button, HIGH);
+  pinMode(green_button, INPUT_PULLUP);
+  //digitalWrite(green_button, HIGH);
   pinMode(buzzer, OUTPUT);
   pinMode(LockPin, OUTPUT);
   digitalWrite(LockPin, HIGH);
-  
+
 
   //-------------game stuff------------
   randomSeed(analogRead(5));     // random seed for sequence generation
@@ -150,15 +154,17 @@ void setup()
 void loop()
 {
 
-  debounceR.update();
-  debounceB.update();
-  debounceG.update();
+
+  //Serial.println("Loop");
   startButton();
+  if ( (debounceR.update()) | (debounceB.update()) | (debounceG.update()) ) {
+    Serial.println(debounceR.read() | debounceB.read() | debounceG.read());
+  }
 
   if (gameWon == 1) {
     gHue++;
     digitalWrite(LockPin, LOW);
-    rainbowWithGlitter_2(10, 80);
+    rainbowWithGlitter_2(10, 20);
     FastLED.setBrightness(255);
     FastLED.show();
     FastLED.delay(1000 / 120);
@@ -300,31 +306,31 @@ void playtone(int tone, int duration) {
 */
 void flash_red() {
   FastLED.setBrightness(255);
-  fill_solid(leds, (topstart, toplength), CRGB::Red);
+  fill_solid(leds + topstart, toplength, CRGB::Red);
   FastLED.show();
   playtone(2273, wait);            // low A
   FastLED.setBrightness(255);
-  fill_solid(leds, (topstart, toplength), CRGB::Black);
+  fill_solid(leds + topstart, toplength, CRGB::Black);
   FastLED.show();
 }
 
 void flash_blue() {
   FastLED.setBrightness(255);
-  fill_solid(leds, (centerstart, centerlength), CRGB::Blue);
+  fill_solid(leds + centerstart, centerlength, CRGB::Blue);
   FastLED.show();
   playtone(1700, wait);            // D
   FastLED.setBrightness(255);
-  fill_solid(leds, (centerstart, centerlength), CRGB::Black);
+  fill_solid(leds + centerstart, centerlength, CRGB::Black);
   FastLED.show();
 }
 
 void flash_green() {
   FastLED.setBrightness(255);
-  fill_solid(leds, (bottomstart, bottomlength), CRGB::Green);
+  fill_solid(leds + bottomstart, bottomlength, CRGB::Green);
   FastLED.show();
   playtone(1275, wait);            // G
   FastLED.setBrightness(255);
-  fill_solid(leds, (bottomstart, bottomlength), CRGB::Black);
+  fill_solid(leds + bottomstart, bottomlength, CRGB::Black);
   FastLED.show();
 }
 
@@ -367,10 +373,9 @@ void congratulate() {
   playtone(1014, 250);
   delay(25);
   playtone(956, 500);
-  delay(2000);
-  resetCount();         // reset sequence
   gameWon = 1;
-
+  playGame = 0;
+  resetCount();         // reset sequence
 }
 
 // function to reset after winning or losing
@@ -395,16 +400,26 @@ void playSequence() {
 
 // function to read sequence from player
 void readSequence() {
+
+
   for (int i = 1; i < count; i++) {             // loop for sequence length
+    Serial.println(input);
+
+
     while (input == 5) {                       // wait until button pressed
-      if ((debounceR.read()) == true) {  // Red button
+
+      checkButtons();
+      if (debounceR.read() == true) {  // Red button
         input = 0;
+        //Serial.println("R ");
       }
-      if ((debounceB.read()) == true) {  // Blue button
+      if (debounceB.read() == true) {  // Blue button
         input = 1;
+        // Serial.println("B ");
       }
-      if ((debounceG.read()) == true) { // Green button
+      if (debounceG.read() == true) { // Green button
         input = 2;
+        // Serial.println("G ");
       }
 
     }
@@ -425,16 +440,32 @@ void readSequence() {
   }
 }
 
+void checkButtons() {
+  debounceR.update();
+  debounceB.update();
+  debounceG.update();
+  //Serial.println("checked");
+}
+
+
 
 void startButton()
 {
-  if ((debounceG.read()) == true) {
+
+  debounceR.update();
+  debounceB.update();
+  debounceG.update();
+
+  if (debounceG.read() == true) {
+    Serial.println ("G ");
     playGame = 1;
   }
-  if ((debounceR.read()) == true) {
+  if (debounceR.read() == true) {
+    Serial.println("R ");
     playGame = 1;
   }
-  if ((debounceB.read()) == true) {
+  if (debounceB.read() == true) {
+    Serial.println ("B ");
     playGame = 1;
   }
 }
