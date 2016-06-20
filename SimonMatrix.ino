@@ -29,7 +29,6 @@ const uint8_t kMatrixHeight = 15;
 
 CRGB leds[NUM_LEDS];
 #define BRIGHTNESS  64
-#define LockPin 13
 
 const int red_button = 2;      // Input pins for the buttons
 const int blue_button = 3;
@@ -40,7 +39,7 @@ Debounce debounceR = Debounce( 20 , red_button );
 Debounce debounceB = Debounce( 20 , blue_button );
 Debounce debounceG = Debounce( 20 , green_button );
 
-const int buzzer = 11;     // Output pin for the buzzer
+const int buzzer = 11;         // Output pin for the buzzer
 long sequence[20];             // Array to hold sequence
 int count = 0;                 // Sequence counter
 long input = 5;                // Button indicator
@@ -48,8 +47,8 @@ int wait = 500;                // Variable delay as sequence gets longer
 
 int gameWon = 0; //did they win the game
 int playGame = 0; // game start switch
-int maxRounds = 10; // number of game rounds (also the max number of lights in a pattern)
-int roundExpire = 3000; //Seconds each game round can wait before failing without input
+int maxRounds = 8; // number of game rounds 
+int roundExpire = 3000; //millis each game round can wait before failing without input
 long roundTime; // when the round started
 
 
@@ -144,8 +143,8 @@ void setup()
   pinMode(green_button, INPUT_PULLUP);
   //digitalWrite(green_button, HIGH);
   pinMode(buzzer, OUTPUT);
-  pinMode(LockPin, OUTPUT);
-  digitalWrite(LockPin, HIGH);
+  pinMode(LOCK_PIN, OUTPUT);
+  digitalWrite(LOCK_PIN, HIGH);
 
 
   //-------------game stuff------------
@@ -167,7 +166,7 @@ void loop()
 
   if (gameWon == 1) {
     gHue++;
-    digitalWrite(LockPin, LOW);
+    digitalWrite(LOCK_PIN, LOW);
     rainbowWithGlitter_2(10, 20);
     FastLED.setBrightness(128);
     FastLED.show();
