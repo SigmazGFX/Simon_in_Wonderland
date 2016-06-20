@@ -165,28 +165,32 @@ void loop()
     gHue++;
     digitalWrite(LockPin, LOW);
     rainbowWithGlitter_2(10, 20);
-    FastLED.setBrightness(255);
+    FastLED.setBrightness(128);
     FastLED.show();
     FastLED.delay(1000 / 120);
   }
 
-  if (playGame == 0) {
-    FastLED.setBrightness(128);
-    // generate noise data
-    fillnoise8();
-    // convert the noise data to colors in the LED array
-    // using the current palette
-    mapNoiseToLEDsUsingPalette();
-    FastLED.show();
-    FastLED.delay(1000 / 30);
+  if (playGame == 0)
+  {
+    if (gameWon == 0) {
+      FastLED.setBrightness(128);
+      // generate noise data
+      fillnoise8();
+      // convert the noise data to colors in the LED array
+      // using the current palette
+      mapNoiseToLEDsUsingPalette();
+      FastLED.show();
+      FastLED.delay(1000 / 30);
+    }
   }
 
   if (playGame == 1) {
-    playSequence();  // play the sequence
-    readSequence();  // read the sequence
-    delay(1000);     // wait a sec
+    if (gameWon == 0) {
+      playSequence();  // play the sequence
+      readSequence();  // read the sequence
+      delay(1000);     // wait a sec
+    }
   }
-
 
 
 }
