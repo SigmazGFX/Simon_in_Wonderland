@@ -47,9 +47,20 @@ int wait = 500;                // Variable delay as sequence gets longer
 
 int gameWon = 0; //did they win the game
 int playGame = 0; // game start switch
-int maxRounds = 8; // number of game rounds 
+int maxRounds = 8; // number of game rounds
 int roundExpire = 3000; //millis each game round can wait before failing without input
 long roundTime; // when the round started
+
+
+//game reset registers
+int resetShift = 0;
+int gameReset1 = 0;
+int gameReset2 = 0;
+int gameReset3 = 0;
+int gameReset4 = 0;
+int gameReset5 = 0;
+int gameReset6 = 0;
+
 
 
 
@@ -158,20 +169,27 @@ void loop()
 {
 
 
-  //Serial.println("Loop");
+
   startButton();
   if ( (debounceR.update()) | (debounceB.update()) | (debounceG.update()) ) {
     Serial.println(debounceR.read() | debounceB.read() | debounceG.read());
   }
 
   if (gameWon == 1) {
-    gHue++;
-    digitalWrite(LOCK_PIN, LOW);
-    rainbowWithGlitter_2(10, 20);
-    FastLED.setBrightness(128);
-    FastLED.show();
-    FastLED.delay(1000 / 120);
+    gameReset();
+    if (gameReset1 == 1 && gameReset2 == 1 && gameReset3 == 1 && gameReset4 == 1 && gameReset5 == 1 && gameReset6 == 1) {
+      gameWon = 0;
+      gameReset1 = 0; gameReset2 = 0; gameReset3 = 0; gameReset4 = 0; gameReset5 = 0; gameReset6 = 0; resetShift = 0;
+    } else {
+      gHue++;
+      digitalWrite(LOCK_PIN, LOW);
+      rainbowWithGlitter_2(10, 20);
+      FastLED.setBrightness(128);
+      FastLED.show();
+      FastLED.delay(1000 / 120);
+    }
   }
+
 
   if (playGame == 0)
   {
@@ -383,6 +401,7 @@ void congratulate() {
   gameWon = 1;
   playGame = 0;
   resetCount();         // reset sequence
+
 }
 
 // function to reset after winning or losing
@@ -460,6 +479,43 @@ void checkButtons() {
   debounceG.update();
 }
 
+void gameReset()
+{
+  debounceR.update();
+  debounceB.update();
+  debounceG.update();
+
+  if (gameReset1 == 1 && gameReset2 == 1 && gameReset3 == 1) {
+    resetShift = 1;
+  }
+
+  if (debounceG.read() == true) {
+    if (resetShift == 0) {
+      gameReset1 = 1;
+    }
+    if (resetShift = 1) {
+      gameReset6 = 1;
+    }
+  }
+
+  if (debounceR.read() == true) {
+    if (resetShift == 0) {
+      gameReset2 = 1;
+    }
+    if (resetShift = 1) {
+      gameReset5 = 1;
+    }
+  }
+  if (debounceB.read() == true) {
+    if (resetShift == 0) {
+      gameReset3 = 1;
+    }
+    if (resetShift = 1) {
+      gameReset4 = 1;
+    }
+
+  }
+}
 
 
 void startButton()
