@@ -146,9 +146,12 @@ void setup()
 
 
 
-  pinMode(red_button, INPUT_PULLUP);    // configure buttons on inputs
-  pinMode(blue_button, INPUT_PULLUP);
-  pinMode(green_button, INPUT_PULLUP);
+  pinMode(red_button, INPUT);    // configure buttons on inputs
+  digitalWrite(red_button, LOW);
+  pinMode(blue_button, INPUT);
+  digitalWrite(blue_button, LOW);
+  pinMode(green_button, INPUT);
+  digitalWrite(green_button, LOW);
   pinMode(buzzer, OUTPUT);
   pinMode(LOCK_PIN, OUTPUT);
   digitalWrite(LOCK_PIN, HIGH);
@@ -426,7 +429,6 @@ void playSequence() {
 void readSequence() {
 
   for (int i = 1; i < count; i++) {             // loop for sequence length
-    // set roundTime with the current millis value
     while (input == 5) {                    // wait until button pressed
 
       checkButtons();
