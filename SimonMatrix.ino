@@ -146,12 +146,9 @@ void setup()
 
 
 
-  pinMode(red_button, INPUT);    // configure buttons on inputs
-  digitalWrite(red_button, LOW);
+  pinMode(red_button, INPUT_PULLUP);    // configure buttons on inputs
   pinMode(blue_button, INPUT_PULLUP);
-  //digitalWrite(blue_button, HIGH);
   pinMode(green_button, INPUT_PULLUP);
-  //digitalWrite(green_button, HIGH);
   pinMode(buzzer, OUTPUT);
   pinMode(LOCK_PIN, OUTPUT);
   digitalWrite(LOCK_PIN, HIGH);
