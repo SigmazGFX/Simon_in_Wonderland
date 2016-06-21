@@ -48,8 +48,7 @@ int wait = 500;                // Variable delay as sequence gets longer
 int gameWon = 0; //did they win the game
 int playGame = 0; // game start switch
 int maxRounds = 8; // number of game rounds
-int roundExpire = 3000; //millis each game round can wait before failing without input
-long roundTime; // when the round started
+
 
 
 //game reset registers
@@ -174,11 +173,15 @@ void loop()
     gameReset();
     if (gameReset1 == 1 && gameReset2 == 1 && gameReset3 == 1 && gameReset4 == 1 && gameReset5 == 1 && gameReset6 == 1) {
       gameWon = 0;
+      playGame = 0;
+      digitalWrite(LOCK_PIN, HIGH);
       gameReset1 = 0; gameReset2 = 0; gameReset3 = 0; gameReset4 = 0; gameReset5 = 0; gameReset6 = 0; resetShift = 0;
+      delay(1000);
     } else {
       gHue++;
       digitalWrite(LOCK_PIN, LOW);
-      rainbowWithGlitter_2(10, 20);
+      rainbowWithGlitter_2(10, 40);
+      //confetti_2(10,10);
       FastLED.setBrightness(128);
       FastLED.show();
       FastLED.delay(1000 / 120);
@@ -421,86 +424,86 @@ void playSequence() {
 }
 
 // function to read sequence from player
+
+
 void readSequence() {
 
   for (int i = 1; i < count; i++) {             // loop for sequence length
-    roundTime = millis();                      // set roundTime with the current millis value
+    // set roundTime with the current millis value
+    while (input == 5) {                    // wait until button pressed
 
-    if (millis() <= roundTime + roundExpire)  // if millis is less than roundTime + roundTimeout
-    {
-      while (input == 5) {                    // wait until button pressed
+      checkButtons();
 
-        checkButtons();
-        if (debounceR.read() == true) {  // Red button
-          input = 0;
-          //Serial.println("R ");
-        }
-        if (debounceB.read() == true) {  // Blue button
-          input = 1;
-          // Serial.println("B ");
-        }
-        if (debounceG.read() == true) { // Green button
-          input = 2;
-          // Serial.println("G ");
-        }
-
+      if (debounceR.read() == true) {  // Red button
+        input = 0;
+        //Serial.println("R ");
       }
-      if (sequence[i - 1] == input) {            // was it the right button?
-        squark(input);                           // flash/buzz
-        if (i == maxRounds) {                    // check if the player has gotten past the final round
-          congratulate();                        // congratulate the winner
-        }
-      } else {
-        playtone(4545, 1000);                    // low tone for fail
-        squark(sequence[i - 1]);                // double flash for the right colour
-        squark(sequence[i - 1]);
-        resetCount();                           // reset sequence
-        playGame = 0;
+      if (debounceB.read() == true) {  // Blue button
+        input = 1;
+        // Serial.println("B ");
       }
-      input = 5;                                // reset input
+      if (debounceG.read() == true) { // Green button
+        input = 2;
+        // Serial.println("G ");
+      }
+
+    }
+    if (sequence[i - 1] == input) {            // was it the right button?
+      squark(input);                           // flash/buzz
+      if (i == maxRounds) {                    // check if the player has gotten past the final round
+        congratulate();                        // congratulate the winner
+      }
     } else {
-      playtone(4545, 1000);                     // low tone for input timeout
-      resetCount();                            // reset sequence
+      playtone(4545, 1000);                    // low tone for fail
+      squark(sequence[i - 1]);                // double flash for the right colour
+      squark(sequence[i - 1]);
+      resetCount();                           // reset sequence
       playGame = 0;
     }
-    input = 5;                                 // reset input
+    input = 5;                                // reset input
+
   }
 }
 
 void gameReset()
 {
-
   checkButtons();
-  if (gameReset1 == 1 && gameReset2 == 1 && gameReset3 == 1) {
-    resetShift = 1;
-  }
 
-  if (debounceG.read() == true) {
+  if (debounceR.read() == true) {
     if (resetShift == 0) {
       gameReset1 = 1;
     }
-    if (resetShift = 1) {
+    if (resetShift == 1) {
       gameReset6 = 1;
     }
   }
 
-  if (debounceR.read() == true) {
+  if (debounceB.read() == true) {
     if (resetShift == 0) {
       gameReset2 = 1;
     }
-    if (resetShift = 1) {
+    if (resetShift == 1) {
       gameReset5 = 1;
     }
   }
-  if (debounceB.read() == true) {
+  if (debounceG.read() == true) {
     if (resetShift == 0) {
       gameReset3 = 1;
     }
-    if (resetShift = 1) {
+    if (resetShift == 1) {
       gameReset4 = 1;
     }
 
   }
+  if (gameReset1 == 1 && gameReset2 == 1 && gameReset3 == 1) {
+    resetShift = 1;
+
+  }
+  //-------reset debugging
+  //  Serial.print("RS:"); Serial.print(resetShift); Serial.print(" R1:");
+  //  Serial.print(gameReset1);Serial.print(" R2:");Serial.print(gameReset2);Serial.print(" R3:");
+  //  Serial.print(gameReset3);Serial.print(" R4:"); Serial.print(gameReset4);Serial.print(" R5:"); Serial.print(gameReset5);
+  //  Serial.print(" R6:");Serial.println(gameReset6);
 }
 
 
@@ -509,16 +512,16 @@ void startButton()
 
   checkButtons();
 
-  if (debounceG.read() == true) {
-    Serial.println ("G ");
-    playGame = 1;
-  }
   if (debounceR.read() == true) {
-    Serial.println("R ");
+    Serial.println ("R ");
     playGame = 1;
   }
   if (debounceB.read() == true) {
-    Serial.println ("B ");
+    Serial.println("B ");
+    playGame = 1;
+  }
+  if (debounceG.read() == true) {
+    Serial.println ("G ");
     playGame = 1;
   }
 }
