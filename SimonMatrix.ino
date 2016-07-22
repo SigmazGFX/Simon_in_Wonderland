@@ -76,9 +76,8 @@ CRGBPalette16 targetPalette( CRGB::Black );
 uint8_t colorLoop = 1;
 uint8_t gHue = 0;
 
-
-// Params for width and height
-
+// Params for individual matrix panels. (used with Simon game)
+// Defines start and legnth positions of LEDs on the single strand
 int topMatrixstart = 0;
 int topMatrixlength = 13;
 int centerMatrixstart = 13;
@@ -99,11 +98,11 @@ const uint8_t ArrayTable[] = {
   65,  9, 66,  8, 67,
   10, 64, 11, 63, 12,
   //--Center
-  15, 61, 14, 62, 13,
-  60, 16, 59, 17, 58,
-  20, 56, 19, 57, 18,
-  55, 21, 54, 22, 53,
-  25, 51, 24, 52, 23,
+  13, 61, 14, 62, 15,
+  60, 17, 59, 16, 58,
+  18, 56, 19, 57, 20,
+  55, 22, 54, 21, 53,
+  23, 51, 24, 52, 25,
   //--Bottom
   26, 50, 27, 49, 28,
   46, 30, 47, 29, 48,
@@ -181,7 +180,7 @@ void loop()
       gHue++;
       digitalWrite(LOCK_PIN, LOW);
       rainbowWithGlitter_2(10, 40);
-      //confetti_2(10,10);
+      //confetti_2(10,10);// optional congrats efffect
       FastLED.setBrightness(128);
       FastLED.show();
       FastLED.delay(1000 / 120);
@@ -399,7 +398,7 @@ void congratulate() {
   gameWon = 1;
   playGame = 0;
   resetCount();         // reset sequence
-
+  digitalWrite(buzzer, LOW);
 }
 
 // function to reset after winning or losing
@@ -458,6 +457,7 @@ void readSequence() {
       squark(sequence[i - 1]);
       resetCount();                           // reset sequence
       playGame = 0;
+      digitalWrite(buzzer, LOW);
     }
     input = 5;                                // reset input
 
