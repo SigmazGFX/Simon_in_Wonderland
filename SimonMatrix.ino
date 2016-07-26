@@ -85,10 +85,6 @@ int centerMatrixlength = 13;
 int bottomMatrixstart = 26;
 int bottomMatrixlength = 13;
 
-// This function will return the right 'led index number' for
-// a given set of X and Y coordinates on your RGB Shades.
-// This code, plus the supporting 80-byte table is much smaller
-// and much faster than trying to calculate the pixel ID with code.
 //5x15 array (75-LEDS) LAST_VISIBLE_LED 38
 const uint8_t ArrayTable[] = {
   //--Top
