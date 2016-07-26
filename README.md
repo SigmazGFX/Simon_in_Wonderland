@@ -5,3 +5,6 @@ the screen is used as a capacitive sensor antennae for each panel.
 
 when the door is idle, noise animations are displayed on the diffused glass panes. in a matrix 
 when touch is detected the module switches to Simon mode and the user plays. once the final round is reached the MCU takes pin 13 low and congratulates the player with a little tune and glitter rainbows..
+
+http://www.youtube.com/watch?v=9llWoNqZGcY
+https://youtu.be/M-qnGOZTAmE﻿
