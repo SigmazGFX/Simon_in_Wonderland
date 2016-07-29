@@ -5,9 +5,6 @@
     in a matrix when touch is detected the module switches to Simon mode and the user plays.
     Once the final round is reached the MCU takes pin 13 low and congratulates the player with
     a little tune and glitter rainbows..
-    Note: previous attempts to use the arduino capsense and other capacitive touch libraries proved difficult because of the large size of 
-    the panels. 
-    Unfortnately this issue and time constraints forced me to use a 4 channel (TTP224) touch sensor because of it's auto sensitivity threshold tuning.
     2016 Jon Bruno(SigmazGFX) for Klues Escape Room, Stroudsburg PA
 */
 
@@ -71,7 +68,9 @@ int gameReset6 = 0;
 static uint16_t x;
 static uint16_t y;
 static uint16_t z;
-uint16_t speed = 20; // speed is set dynamically once we've started up
+//uint16_t speed = 20; // speed is set dynamically once we've started up
+uint16_t speed = 5; // speed is set dynamically once we've started up
+
 uint16_t scale = 30; // scale is set dynamically once we've started up
 uint8_t noise[MAX_DIMENSION][MAX_DIMENSION];
 CRGBPalette16 currentPalette( CRGB::Black );
@@ -88,6 +87,10 @@ int centerMatrixlength = 13;
 int bottomMatrixstart = 26;
 int bottomMatrixlength = 13;
 
+// This function will return the right 'led index number' for
+// a given set of X and Y coordinates on your RGB Shades.
+// This code, plus the supporting 80-byte table is much smaller
+// and much faster than trying to calculate the pixel ID with code.
 //5x15 array (75-LEDS) LAST_VISIBLE_LED 38
 const uint8_t ArrayTable[] = {
   //--Top
@@ -180,7 +183,7 @@ void loop()
       digitalWrite(LOCK_PIN, LOW);
       rainbowWithGlitter_2(10, 40);
       //confetti_2(10,10);// optional congrats efffect
-      FastLED.setBrightness(128);
+      FastLED.setBrightness(255);
       FastLED.show();
       FastLED.delay(1000 / 120);
     }
@@ -190,7 +193,9 @@ void loop()
   if (playGame == 0)
   {
     if (gameWon == 0) {
-      FastLED.setBrightness(128);
+      FastLED.setBrightness(64);
+      //FastLED.setBrightness(128);
+      
       // generate noise data
       fillnoise8();
       // convert the noise data to colors in the LED array
@@ -198,6 +203,7 @@ void loop()
       mapNoiseToLEDsUsingPalette();
       FastLED.show();
       FastLED.delay(1000 / 30);
+      
     }
   }
 
@@ -234,7 +240,7 @@ void fillnoise8() {
   // from frame-to-frame.  In order to reduce this, we can do some fast data-smoothing.
   // The amount of data smoothing we're doing depends on "speed".
   uint8_t dataSmoothing = 0;
-  if ( speed < 50) {
+  if ( speed < 20) {
     dataSmoothing = 200 - (speed * 4);
   }
 
@@ -293,7 +299,7 @@ void mapNoiseToLEDsUsingPalette()
       } else {
         bri = dim8_raw( bri * 2);
       }
-      currentPalette = CloudColors_p;
+     currentPalette = CloudColors_p;
       CRGB color = ColorFromPalette( currentPalette, index, bri);
       leds[XY(i, j)] = color;
     }
@@ -539,4 +545,19 @@ void confetti_2( uint8_t colorVariation, uint8_t fadeAmount)
   fadeToBlackBy( leds, NUM_LEDS, fadeAmount);
   int pos = random16(NUM_LEDS);
   leds[pos] += CHSV( gHue + random8(colorVariation), 200, 255);
+}
+// This function sets up a palette of black and white stripes,
+// using code.  Since the palette is effectively an array of
+// sixteen CRGB colors, the various fill_* functions can be used
+// to set them up.
+void SetupBlackAndWhiteStripedPalette()
+{
+    // 'black out' all 16 palette entries...
+    fill_solid( currentPalette, 16, CRGB::Black);
+    // and set every fourth one to white.
+    currentPalette[0] = CRGB::White;
+    currentPalette[4] = CRGB::White;
+    currentPalette[8] = CRGB::White;
+    currentPalette[12] = CRGB::White;
+    
 }
