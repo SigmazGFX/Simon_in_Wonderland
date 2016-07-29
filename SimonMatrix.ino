@@ -5,6 +5,9 @@
     in a matrix when touch is detected the module switches to Simon mode and the user plays.
     Once the final round is reached the MCU takes pin 13 low and congratulates the player with
     a little tune and glitter rainbows..
+   Note: previous attempts to use the arduino capsense and other capacitive touch libraries proved difficult because of the large size of 
+    the panels. 
+    Unfortnately this issue and time constraints forced me to use a 4 channel (TTP224) touch sensor because of it's auto sensitivity threshold tuning.
     2016 Jon Bruno(SigmazGFX) for Klues Escape Room, Stroudsburg PA
 */
 
