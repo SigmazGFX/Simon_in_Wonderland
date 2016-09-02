@@ -5,8 +5,8 @@
     in a matrix when touch is detected the module switches to Simon mode and the user plays.
     Once the final round is reached the MCU takes pin 13 low and congratulates the player with
     a little tune and glitter rainbows..
-   Note: previous attempts to use the arduino capsense and other capacitive touch libraries proved difficult because of the large size of 
-    the panels. 
+   Note: previous attempts to use the arduino capsense and other capacitive touch libraries proved difficult because of the large size of
+    the panels.
     Unfortnately this issue and time constraints forced me to use a 4 channel (TTP224) touch sensor because of it's auto sensitivity threshold tuning.
     2016 Jon Bruno(SigmazGFX) for Klues Escape Room, Stroudsburg PA
 */
@@ -20,7 +20,8 @@ FASTLED_USING_NAMESPACE
 #error "Requires FastLED 3.1 or later; check github for latest code."
 #endif
 
-#define LOCK_PIN    13 // Pin to control the lock
+#define LOCK_PIN0    12 // Low when locked
+#define LOCK_PIN1    13 // High when Locked
 
 #define DATA_PIN   6
 #define LED_TYPE    WS2812B
@@ -133,9 +134,24 @@ uint8_t XY( uint8_t x, uint8_t y)
 
 void setup()
 {
+  Serial.begin(9600);
+
+  Serial.println("Simon in Wonderland 2016 -Sigmaz@gmail.com(Jon Bruno)");
+  Serial.println("");
+  Serial.println("---PINOUTS--- ");
+  Serial.println("WS2812b LED DATA - Pin 6");
+  Serial.println("Red Button(top) - Pin 2");
+  Serial.println("Blue Button(center) - Pin 3");
+  Serial.println("Green Button(bottom) - Pin 4");
+  Serial.println("Buzzer_pin - Pin 11");
+  Serial.println("Lock_Pin0 (low when locked) - Pin 12");
+  Serial.println("Lock_Pin1 (high when locked) - Pin 13");
+  Serial.println("-------------");
+  Serial.println("");
+  Serial.println("Pausing 3 Seconds for recovery");
+  Serial.println("");
   delay(3000); // 3 second delay for recovery
 
-  Serial.begin(9600);
 
 
   x = random16();
@@ -157,9 +173,13 @@ void setup()
   pinMode(green_button, INPUT);
   digitalWrite(green_button, LOW);
   pinMode(buzzer, OUTPUT);
-  pinMode(LOCK_PIN, OUTPUT);
-  digitalWrite(LOCK_PIN, HIGH);
+  pinMode(LOCK_PIN0, OUTPUT);
+  pinMode(LOCK_PIN1, OUTPUT);
+  digitalWrite(LOCK_PIN0, LOW);
+  digitalWrite(LOCK_PIN1, HIGH);
   randomSeed(analogRead(5));     // random seed for sequence generation
+
+  Serial.println("Inits done. Starting main loop");
 }
 
 
@@ -178,12 +198,14 @@ void loop()
     if (gameReset1 == 1 && gameReset2 == 1 && gameReset3 == 1 && gameReset4 == 1 && gameReset5 == 1 && gameReset6 == 1) {
       gameWon = 0;
       playGame = 0;
-      digitalWrite(LOCK_PIN, HIGH);
+      digitalWrite(LOCK_PIN0, HIGH);
+      digitalWrite(LOCK_PIN1, LOW);
       gameReset1 = 0; gameReset2 = 0; gameReset3 = 0; gameReset4 = 0; gameReset5 = 0; gameReset6 = 0; resetShift = 0;
       delay(1000);
     } else {
       gHue++;
-      digitalWrite(LOCK_PIN, LOW);
+      digitalWrite(LOCK_PIN0, LOW);
+      digitalWrite(LOCK_PIN1, HIGH);
       rainbowWithGlitter_2(10, 40);
       //confetti_2(10,10);// optional congrats efffect
       FastLED.setBrightness(255);
@@ -198,7 +220,7 @@ void loop()
     if (gameWon == 0) {
       FastLED.setBrightness(64);
       //FastLED.setBrightness(128);
-      
+
       // generate noise data
       fillnoise8();
       // convert the noise data to colors in the LED array
@@ -206,7 +228,7 @@ void loop()
       mapNoiseToLEDsUsingPalette();
       FastLED.show();
       FastLED.delay(1000 / 30);
-      
+
     }
   }
 
@@ -302,7 +324,7 @@ void mapNoiseToLEDsUsingPalette()
       } else {
         bri = dim8_raw( bri * 2);
       }
-     currentPalette = CloudColors_p;
+      currentPalette = CloudColors_p;
       CRGB color = ColorFromPalette( currentPalette, index, bri);
       leds[XY(i, j)] = color;
     }
@@ -555,12 +577,12 @@ void confetti_2( uint8_t colorVariation, uint8_t fadeAmount)
 // to set them up.
 void SetupBlackAndWhiteStripedPalette()
 {
-    // 'black out' all 16 palette entries...
-    fill_solid( currentPalette, 16, CRGB::Black);
-    // and set every fourth one to white.
-    currentPalette[0] = CRGB::White;
-    currentPalette[4] = CRGB::White;
-    currentPalette[8] = CRGB::White;
-    currentPalette[12] = CRGB::White;
-    
+  // 'black out' all 16 palette entries...
+  fill_solid( currentPalette, 16, CRGB::Black);
+  // and set every fourth one to white.
+  currentPalette[0] = CRGB::White;
+  currentPalette[4] = CRGB::White;
+  currentPalette[8] = CRGB::White;
+  currentPalette[12] = CRGB::White;
+
 }
