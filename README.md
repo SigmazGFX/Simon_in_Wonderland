@@ -8,8 +8,7 @@ when touch is detected the module switches to Simon mode and the user plays. onc
 
 
 [![SimonInWonderland](https://img.youtube.com/vi/9llWoNqZGcY/0.jpg)](https://www.youtube.com/watch?v=9llWoNqZGcY)
-http://www.youtube.com/watch?v=9llWoNqZGcY
 
 
 [![SimonInWonderland](https://img.youtube.com/vi/M-qnGOZTAmE/0.jpg)](https://www.youtube.com/watch?v=M-qnGOZTAmE)
-https://youtu.be/M-qnGOZTAmE﻿
+
