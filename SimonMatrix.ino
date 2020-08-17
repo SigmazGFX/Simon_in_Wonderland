@@ -136,7 +136,7 @@ void setup()
 {
   Serial.begin(9600);
 
-  Serial.println("Simon in Wonderland 2016 -Sigmaz@gmail.com(Jon Bruno)");
+  Serial.println("Simon in Wonderland 2016 -SigmazGFX@gmail.com(Jon Bruno)");
   Serial.println("");
   Serial.println("---PINOUTS--- ");
   Serial.println("WS2812b LED DATA - Pin 6");
